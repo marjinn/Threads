@@ -123,15 +123,21 @@
     //-- RunLoop of the caller Thread
     [[NSRunLoop currentRunLoop] runUntilDate:[NSDate dateWithTimeInterval:20.0 sinceDate:[NSDate date]]];
 
-    NSLog(@"%s",__PRETTY_FUNCTION__);
-    NSLog(@"%@",NameTable);
+    @autoreleasepool
+    {
+        NSLog(@"%s",__PRETTY_FUNCTION__);
+        NSLog(@"%@",NameTable);
+    }
     return;
 }
 
 -(void)newSelectorToBePerformed:(NSString*) whatever
 {
-    NSLog(@"%s",__PRETTY_FUNCTION__);
-    NSLog(@"%@",whatever);
+    @autoreleasepool
+    {
+        NSLog(@"%s",__PRETTY_FUNCTION__);
+        NSLog(@"%@",whatever);
+    }
 
     return;
 }
