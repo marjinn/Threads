@@ -9,8 +9,10 @@
 
 @interface CQMWeddedToThreads : NSObject
 
+//-- NSThreads
 -(void)NSThreads;
 
+//-- posiX
 -(void)posiX;
 
 @end

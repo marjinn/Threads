@@ -154,7 +154,8 @@ void* PosiXThreadMainRoutine(void* data)
 
 void LaunchThread(void)
 {
-    //-- Create a thread using PosiX routines
+    
+    //-- Create a new thread using PosiX routines
     
     //-- thread attributes object
     pthread_attr_t  attr ;
