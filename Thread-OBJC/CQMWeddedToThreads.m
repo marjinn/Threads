@@ -110,7 +110,21 @@
     // --
     
     
-     
+    //---#2 -- out of curiosity - Thread Local Storage
+    //-- PRint the "threadDictionary" used as Thread Local Storage
+    //------------------------------------------------------------
+    NSLog(@"[[NSThread mainThread] threadDictionary] - %@",[[NSThread mainThread] threadDictionary]);
+    
+    NSLog(@"[myThread threadDictionary] - %@",[myThread threadDictionary]);
+    
+    //---#3 - Thread Priority - NS_DEPRECATED(10_6, 10_10, 4_0, 8_0);
+    //-----------------------
+    //-- The thread priority to use when executing the operation
+    //-- The value in this property is a floating-point number
+    //-- in the range 0.0 to 1.0, where 1.0 is the highest priority.
+    //-- The default thread priority is 0.5.
+    [myThread setThreadPriority:(double)0.6];
+    
     return;
 }
 
@@ -176,7 +190,8 @@ void LaunchThread(void)
     returnVal = pthread_attr_init(&attr);
     assert(!returnVal);
     
-    //-- Set the detach state in a thread attributes object.
+    //-- Set the detach state in a thread attributes object
+    //-- PTHREAD_CREATE_JOINABLE - is the default value
     returnVal = pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
     assert(!returnVal);
     
@@ -203,6 +218,16 @@ void LaunchThread(void)
     {
         //Report an error while creating a thread
     }
+    
+    //-- set Thread Priority
+    
+    struct sched_param sched_param_po =
+    { .sched_priority = 0 };
+
+    pthread_setschedparam(pthread_self() /* get current thread */,
+                          SCHED_OTHER,
+                          (const struct sched_param *)&sched_param_po);
+    
     
     return;
 }
