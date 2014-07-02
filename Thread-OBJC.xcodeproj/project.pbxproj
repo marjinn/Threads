@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		159F939019637510006E216F /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 159F938F19637510006E216F /* main.m */; };
+		159F93971963753F006E216F /* CQMWeddedToThreads.m in Sources */ = {isa = PBXBuildFile; fileRef = 159F93961963753F006E216F /* CQMWeddedToThreads.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -25,6 +26,8 @@
 /* Begin PBXFileReference section */
 		159F938C19637510006E216F /* Thread-OBJC */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "Thread-OBJC"; sourceTree = BUILT_PRODUCTS_DIR; };
 		159F938F19637510006E216F /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
+		159F93961963753F006E216F /* CQMWeddedToThreads.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CQMWeddedToThreads.m; sourceTree = "<group>"; };
+		159F939819637562006E216F /* CQMWeddedToThreads.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CQMWeddedToThreads.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -58,6 +61,8 @@
 			isa = PBXGroup;
 			children = (
 				159F938F19637510006E216F /* main.m */,
+				159F939819637562006E216F /* CQMWeddedToThreads.h */,
+				159F93961963753F006E216F /* CQMWeddedToThreads.m */,
 			);
 			path = "Thread-OBJC";
 			sourceTree = "<group>";
@@ -119,6 +124,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				159F939019637510006E216F /* main.m in Sources */,
+				159F93971963753F006E216F /* CQMWeddedToThreads.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -203,6 +209,8 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				VERSIONING_SYSTEM = "apple-generic";
+				WARNING_CFLAGS = "-Wall";
 			};
 			name = Debug;
 		};
@@ -210,6 +218,8 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				VERSIONING_SYSTEM = "apple-generic";
+				WARNING_CFLAGS = "-Wall";
 			};
 			name = Release;
 		};

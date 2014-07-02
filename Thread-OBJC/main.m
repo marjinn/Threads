@@ -7,11 +7,33 @@
 //
 
 #import <Foundation/Foundation.h>
+#import "CQMWeddedToThreads.h"
 
-int main(int argc, const char * argv[]) {
-    @autoreleasepool {
+void callsToMain(void);
+
+int main(int argc, const char * argv[])
+{
+    @autoreleasepool
+    {
         // insert code here...
         NSLog(@"Hello, World!");
+        
+        callsToMain();
+        
+        ///MainRunLoop - run for 10 extra seconds
+        //             - wait for secondary threads
+        [[NSRunLoop currentRunLoop] runUntilDate:[NSDate dateWithTimeInterval:10.0 sinceDate:[NSDate date]]];
+        
+        
+        
     }
     return 0;
+}
+
+void callsToMain(void)
+{
+    CQMWeddedToThreads* weddedToThreads = [CQMWeddedToThreads new];
+    //[weddedToThreads NSThreads];
+    
+    [weddedToThreads posiX];
 }
