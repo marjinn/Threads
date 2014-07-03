@@ -139,8 +139,18 @@
 
     @autoreleasepool
     {
+        NS_DURING
         NSLog(@"%s",__PRETTY_FUNCTION__);
         NSLog(@"%@",NameTable);
+        
+        NS_HANDLER
+        NSLog(@"%@",[localException name]);
+        NSLog(@"%@",[localException reason]);
+        NSLog(@"%@",[localException callStackSymbols]);
+        
+        @throw(localException);
+        
+        NS_ENDHANDLER
     }
     return;
 }
