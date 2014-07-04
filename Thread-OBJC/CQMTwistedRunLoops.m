@@ -8,6 +8,9 @@
 
 
 #import "CQMTwistedRunLoop.h"
+
+@import CoreFoundation;
+
 //-- RunLoops --//
 //--------------//
 /*
@@ -38,10 +41,8 @@
     - also deliver events to their handler routines but do not cause 
         the runloop to exit
  
- c. Cocoa Perform Selector Sources
-    ------------------------------
  
- All Sources use Application specific routines to process the event
+ Both Sources use Application specific routines to process the event
  when it arrives
  
  //-- # "Run Loop Observers"
@@ -50,6 +51,7 @@
  6. Registered runloop observers can recieve this notifications and 
     use them to do aadditional processing on the thread
  7. Core Foundation is used to install run-loop observers
+ 
  
  8. Run Loop Modes
     --------------
@@ -173,7 +175,30 @@
                     - configure the source
                     - handle any incoming events
                     - tear down a source when it is removed form the runloop
+                - we define both
+                    - behavior of the custom source
+                        - (described above)
+                    - event delivery mechanism
+                        - runs on separate thread 
+                        - is responsible for providing the input source with
+                            its data
+                        - signaling the input source when 
+                            that data is ready for processing
  
+ 3. Cocoa Perform Selector Sources
+    -------------------------------
+        - Cocoa defined custom input source.
+        - removes itself from runloop after it performs its selector
+        - the target thread must have an active run loop
+        - for ( secondary) threads we create it means ,waiting until our code explicitly
+            starts the runloop
+        - main thread starts its on runloop, so we can begin issuing calls on
+            the "main thread" as soons as application calls
+            "applicationDidFinishLaunching:" method of application delegate.
+        - "runloop processes all queued perform selector calls each time through the loop ,rather than processing one during each iteration"
+        - can be used on POSIX threads as well
+        - declared on NSObject
+        - These methods do not create a new thread to perform a selector
  
  
  d. When you create an input source ,
@@ -182,13 +207,425 @@
  f. If an input source is not in the currently monitored mode,
     any event it generates are held until the runlopp runs in correct mode.
  
+ //-- Performing selectors on other threads
+ -------------------------------------------
+ 
+ Methods.:-     performSelectorOnMainThread:withObject:waitUntilDone:
+                performSelectorOnMainThread:withObject:waitUntilDone:modes:
+ Description.:-
+                Performs the specified selector on the application’s 
+                main thread during that thread’s next run loop cycle. 
+                These methods give you the option of blocking the current 
+                thread until the selector is performed.
+ 
+ Methods.:-     performSelector:onThread:withObject:waitUntilDone:
+                performSelector:onThread:withObject:waitUntilDone:modes:
+ Description.:-
+                Performs the specified selector on any thread for which you 
+                have an NSThread object. 
+                These methods give you the option of blocking the current
+                thread until the selector is performed.
+ 
+ Methods.:-     performSelector:withObject:afterDelay:
+                performSelector:withObject:afterDelay:inModes:
+ Description.:-
+                Performs the specified selector on the current thread during
+                the next run loop cycle and after an optional delay period.
+                Because it waits until the next run loop cycle to perform the
+                selector, these methods provide an automatic mini delay from
+                the currently executing code.
+                Multiple queued selectors are performed one after another in 
+                the order they were queued.
+ 
+ Methods.:-     cancelPreviousPerformRequestsWithTarget:
+                cancelPreviousPerformRequestsWithTarget:selector:object:
+ Description.:-
+                Lets you cancel a message sent to the current thread using the 
+                performSelector:withObject:afterDelay: or 
+                performSelector:withObject:afterDelay:inModes: method.
+ 
+ 11. Timer Sources - In detail
+ -----------------------------
+    a. delivers evenst asynchronously to your threads at apreset time in future
+    b. eg.:- 
+            - Timers are a way for a thread to notify itself to do something.
+            - For example, a search field could use a timer to initiate an
+                automatic search once a certain amount of time has passed between successive key strokes from the user. The use of
+                    this delay time gives the user a chance to type as much of 
+                    the desired search string 
+                    as possible before beginning the search.
+    c. timers are associated with specific modes of your run loop
+    d. If a timer is not in the mode currently being monitored by the run loop, 
+        it does not fire until you run the run loop in one of the timer’s 
+        supported modes.
+ 
+    e.  if a timer fires when the run loop is in the middle of executing a 
+        handler routine, the timer waits until the next time through the run 
+        loop to invoke its handler routine.
+    f.  If the run loop is not running at all,the timer never fires.
+    h. Repeated Timers
+        --------------
+            - repeated timers recshedule itself automatically based on
+                scheduled firing time
+            - if a timer is scheduled to fire at a particular time and
+                every 5 seconds after that, the scheduled firing time will 
+                always fall on the original 5 second time intervals, even if 
+                the actual firing time gets delayed.
+            - if the firing time is delayed so much that
+                it misses one or more of the scheduled firing times,
+                the timer is fired only once for the missing time period
+            - after firing for the missing time period, 
+                the timer is rescheduled for the next scheduled firing time
+ 
+ 12. RunLoop Observers - In detail
+ ----------------------------------
+    a. fire at special locations at the execution of the run loop itself.
+    b. can be used to 
+                        - prepare the thread to process a given event
+                        - prepare the thread before it goes to sleep
+                        - and the like.
+    c. List of events you can associate run lopp obesrvers with
+            
+            -- Entrance of run loop notification
+            ---------------------------------------
+            1. the "entrance of the run loop"
+            
+            -- about to process a timer notification
+            ------------------------------------------
+            2. When the run loop is "about to process a timer".
+            
+            -- About to process an input source notification
+            --------------------------------------------------
+            3. When the run loop is "about to process an input source".
+            
+            -- About to go to sleep notification
+            ---------------------------------------
+            4. When the run loop is "about to go to sleep".
+            
+            -- Run loop has been woken up notification
+            -------------------------------------------
+            5. When the run lopp has been woken up,but before it has processed
+                the event that woke it up.
+            
+            -- exit from the runloop notification
+            ---------------------------------------
+            6. The exit from the runloop.
+ 
+    d. run-loop observers are added using Core Foundation
+    e. To create a run-loop observer, you create a new instnce of the
+        "CFRunLoopObserverRef" opaque type
+    f.  This type keeps track of 
+                                - your custom callback functions
+                                - the activities in which it is intersted in
+    g. run-lopp observers are of 2 types
+                                1. one-shot observers
+                                    - removes itself from the runlopp 
+                                        after it fires
+                                2. repeating observers
+                                    - remain attached as they are run 
+                                        repeatedly.
+ 13. Run Loop - Sequence of Events
+ ---------------------------------
+ a. Each time you run it, your thread’s run loop processes pending events 
+        and generates notifications for any attached observers.
+        The order in which it does this is very specific and is as follows:
+            
+            NOTIFY Functions
+            ----------------
+            1. Notify observers that the run loop has been entered.
+            2. Notify observers that any ready timers are about to fire.
+            3. Notify observers that any input sources that are 
+                not port based are about to fire.
+            
+            4. Fire any non-port-based input sources that are ready to fire.
+            5. If a port-based input source is ready and waiting to fire, process the event immediately. Go to step 9.
+            
+            NOTIFY Functions
+            ----------------
+            6. Notify observers that the thread is about to sleep.
+            
+            7. Put the thread to sleep until one of the following events
+                occurs:
+                a. An event arrives for a port-based input source.
+                b. A timer fires.
+                c. The timeout value set for the run loop expires.
+                d. The run loop is explicitly woken up.
+ 
+            NOTIFY Functions
+            ----------------
+            8. Notify observers that the thread just woke up.
+            
+            9. Process the pending event.
+                a. If a user-defined timer fired, process the timer event and
+                    restart the loop. Go to step 2.
+                b. If an input source fired, deliver the event.
+                c. If the run loop was explicitly woken up but has not yet 
+                    timed out, restart the loop. Go to step 2.
+ 
+            NOTIFY Functions
+            ----------------
+            10. Notify observers that the run loop has exited.
+ 
+ b. Special behaviour
+ ---------------------
+ 1. Since observer notifications for timer and input sources are delivered
+    before those events actually occur, there may be  a "gap between the time
+    of the notifications and the time of actual events".
+ 2. Time critical Events
+    --------------------
+    - for events where timing between the events is critical ,
+        you can use the "sleep" and "wake up from sleep" notifications 
+        to help correlate the time between the actual events
+ 3. Events causing the run loop to wake up 
+        - explicit wake up using run loop object
+        - adding another non-port based input source 
+            (will be processed immediatly)
+ 
+ 14. WHEN WOULD YOU USE A RUN LOOP
+ ---------------------------------
+    - The only time you need to run a run loop explicitly is when you create secondary threads for your application
+    - You need to start a run loop if you plan to do any of the following:
+ 
+        1. Use ports or custom input sources to communicate with other threads.
+        2. Use timers on the thread.
+        3. Use any of the performSelector… methods in a Cocoa application.
+        4. Keep the thread around to perform periodic tasks.
+ 
+ 15. Using Run Loop Objects
+ ---------------------------
+    a. provides the main interface for adding 
+                    1. input sources,
+                    2. timers and
+                    3. run-loop observers
+        and the running it
+    b. Evert thread has a single runLoop object
+    c. Cocoa
+            - NSRunLoop
+        
+        Core Foundation
+            - CFRunLoopRef
+ 
+ 16. Getting the run loop object
+ --------------------------------
+    a. Cocoa 
+            - to retrieve an NSRunLoop object
+                [NSRunLoop currentRunLoop]
+            
+            - to get CFRunLoopRef
+                [[NSRunLoop currentRunLoop] getCFRunLoop]
  
  
+    b. CoreFoundation 
+            - to retrieve CFRunLoopRef
+                CFRunLoopGetCurrent()
+
+17. Configuring the runLoop
+---------------------------
+    1. Before you run a run loop on a secondary thread you must add 
+        atleast one input source or timer to it.
+    2. If a run loop does not have any sources to monitor,
+        it exits immediately when you try to run it.
+    3. In addition to installing sources, you can also install 
+        run loop observers and use them 
+        to detect different execution stages of the run loop. 
+          - To install a run loop observer
+               ---------------------------
+                    - you create a CFRunLoopObserverRef opaque type and 
+                        use the CFRunLoopAddObserver function to add it
+                        to your run loop. 
+                    - Run loop observers must be created using 
+                        Core Foundation, even for Cocoa applications.
  
  */
 
-
 @implementation CQMTwistedRunLoop
+#pragma mark -
+#pragma mark Run Loop Observer
+#pragma mark -
+
+-(void)theThread
+{
+    NSThread* theThread = nil;
+    theThread = [[NSThread alloc] initWithTarget:(id)self
+                                        selector:@selector(threadMain)
+                                          object:nil];
+    
+    [theThread setName:NSStringFromSelector(_cmd)];
+    
+    [theThread start];
+    
+    theThread = nil;
+    return;
+}
+
+
+-(void)threadMain
+{
+    //-- No garbagle collection -
+    //-- Set up the AutoRelease pool
+    @autoreleasepool
+    {
+        //-- get the current run loop
+        NSRunLoop* myRunLoop = nil;
+        myRunLoop = [NSRunLoop currentRunLoop];
+        
+        //- Create a run loop observer
+        /*
+         typedef struct {
+         CFIndex	version;
+         void *	info;
+         const void *(*retain)(const void *info);
+         void	(*release)(const void *info);
+         CFStringRef	(*copyDescription)(const void *info);
+         } CFRunLoopObserverContext;
+
+         */
+        CFRunLoopObserverContext context;
+        context.version         = 0.0;
+        context.info            = (__bridge void *)(self);
+        context.retain          = NULL;
+        context.release         = NULL;
+        context.copyDescription = NULL;
+        
+        /*
+         CF_EXPORT CFRunLoopObserverRef CFRunLoopObserverCreate(CFAllocatorRef allocator, CFOptionFlags activities, Boolean repeats, CFIndex order, CFRunLoopObserverCallBack callout, CFRunLoopObserverContext *context);
+         */
+        CFRunLoopObserverRef observer = NULL;
+        observer =
+        CFRunLoopObserverCreate(
+                                kCFAllocatorDefault,
+                                kCFRunLoopAllActivities,
+                                true,
+                                0,
+                                (CFRunLoopObserverCallBack)
+                                &myCFRunLoopObserverCallBack,
+                                (CFRunLoopObserverContext*)&context
+                                );
+        
+        
+        if (observer)
+        {
+            CFRunLoopRef cfLoop = NULL;
+            cfLoop = [myRunLoop getCFRunLoop];
+            
+            if (cfLoop)
+            {
+                /*
+                 CF_EXPORT void CFRunLoopAddObserver(CFRunLoopRef rl, CFRunLoopObserverRef observer, CFStringRef mode);
+                 */
+                CFRunLoopAddObserver(
+                                     (CFRunLoopRef)cfLoop,
+                                     (CFRunLoopObserverRef) observer,
+                                     (CFStringRef)kCFRunLoopDefaultMode
+                                     );
+            }//cfLoop
+        
+        }//observer
+        
+        
+        //Create a timer source
+        [NSTimer scheduledTimerWithTimeInterval:(NSTimeInterval)0.1
+                                         target:(id)self
+                                       selector:@selector(doFireTimer:)
+                                       userInfo:nil
+                                        repeats:YES];
+        
+        NSTimeInterval loopCount = 1;
+        
+        do
+        {
+            //run the run loop 10 times to let the timer fire
+            [myRunLoop runUntilDate:
+             [NSDate dateWithTimeIntervalSinceNow:loopCount]];
+            
+            NSLog(@"--- @@@@@@@ ---- \n");
+            NSLog(@"--- @@loopCount@@@@ ---- %f \n",loopCount);
+            NSLog(@"--- @@@@@@@ ----\n");
+            
+            loopCount--;
+        }
+        while (loopCount);
+        
+    }//@autoreleasepool
+    return;
+}
+
+//
+/*
+ typedef void (*CFRunLoopObserverCallBack)(CFRunLoopObserverRef observer, CFRunLoopActivity activity, void *info);
+ */
+
+void myCFRunLoopObserverCallBack (CFRunLoopObserverRef observer, CFRunLoopActivity activity, void *info)
+{
+    NSLog(@"--- @@@@@@@ ---- \n");
+    NSLog(@"--- @@__COUNTER__@@@@ ---- %u \n",arc4random());
+    NSLog(@"--- @@@@@@@ ----\n");
+    
+    printf("observer - %p\n",observer);
+    
+    /*
+     Run Loop Observer Activities
+     -----------------------------
+    typedef CF_OPTIONS(CFOptionFlags, CFRunLoopActivity) 
+     {
+        kCFRunLoopEntry = (1UL << 0),
+        kCFRunLoopBeforeTimers = (1UL << 1),
+        kCFRunLoopBeforeSources = (1UL << 2),
+        kCFRunLoopBeforeWaiting = (1UL << 5),
+        kCFRunLoopAfterWaiting = (1UL << 6),
+        kCFRunLoopExit = (1UL << 7),
+        kCFRunLoopAllActivities = 0x0FFFFFFFU
+    };
+     */
+    switch (activity)
+    {
+        case (1UL << 0):
+            printf("\n kCFRunLoopEntry \n");
+            break;
+            
+        case (1UL << 1):
+            printf("\n kCFRunLoopBeforeTimers \n");
+            break;
+            
+        case (1UL << 2):
+            printf("\n kCFRunLoopBeforeSources\n");
+            break;
+            
+        case (1UL << 5):
+            printf("\n kCFRunLoopBeforeWaiting \n");
+            break;
+            
+        case (1UL << 6):
+            printf("\n kCFRunLoopAfterWaiting \n");
+            break;
+            
+        case (1UL << 7):
+            printf("\n kCFRunLoopExit \n");
+            break;
+            
+        case 0x0FFFFFFFU:
+            printf("\n kCFRunLoopAllActivities \n");
+            break;
+            
+        default:
+            printf("activity - %lu\n",activity);
+            break;
+    }
+    
+    printf("info - %s\n",info);
+    
+    return;
+}
+
+//Timer Func
+-(void)doFireTimer:(NSTimer *)timer
+{
+    NSString* timerString = nil;
+    timerString = NSStringFromSelector(_cmd);
+    
+    NSLog(@"\n timerString \n %@\n",timerString);
+    return;
+}
 
 -(void)threadMainRoutineSampleRunLoop
 {

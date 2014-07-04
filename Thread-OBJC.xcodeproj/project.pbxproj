@@ -10,6 +10,7 @@
 		159F939019637510006E216F /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 159F938F19637510006E216F /* main.m */; };
 		159F93971963753F006E216F /* CQMWeddedToThreads.m in Sources */ = {isa = PBXBuildFile; fileRef = 159F93961963753F006E216F /* CQMWeddedToThreads.m */; };
 		159F939A19638E1A006E216F /* CQMTwistedRunLoops.m in Sources */ = {isa = PBXBuildFile; fileRef = 159F939919638E1A006E216F /* CQMTwistedRunLoops.m */; };
+		15C32E24196727D800E17A4D /* CQMTwistedRunLoopTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 15C32E23196727D800E17A4D /* CQMTwistedRunLoopTests.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -31,6 +32,8 @@
 		159F939819637562006E216F /* CQMWeddedToThreads.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CQMWeddedToThreads.h; sourceTree = "<group>"; };
 		159F939919638E1A006E216F /* CQMTwistedRunLoops.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CQMTwistedRunLoops.m; sourceTree = "<group>"; };
 		15B2B047196631190075F417 /* CQMTwistedRunLoop.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CQMTwistedRunLoop.h; sourceTree = "<group>"; };
+		15C32E22196727D800E17A4D /* CQMTwistedRunLoopTests.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CQMTwistedRunLoopTests.h; sourceTree = "<group>"; };
+		15C32E23196727D800E17A4D /* CQMTwistedRunLoopTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CQMTwistedRunLoopTests.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -68,6 +71,8 @@
 				159F93961963753F006E216F /* CQMWeddedToThreads.m */,
 				15B2B047196631190075F417 /* CQMTwistedRunLoop.h */,
 				159F939919638E1A006E216F /* CQMTwistedRunLoops.m */,
+				15C32E22196727D800E17A4D /* CQMTwistedRunLoopTests.h */,
+				15C32E23196727D800E17A4D /* CQMTwistedRunLoopTests.m */,
 			);
 			path = "Thread-OBJC";
 			sourceTree = "<group>";
@@ -130,6 +135,7 @@
 			files = (
 				159F939A19638E1A006E216F /* CQMTwistedRunLoops.m in Sources */,
 				159F939019637510006E216F /* main.m in Sources */,
+				15C32E24196727D800E17A4D /* CQMTwistedRunLoopTests.m in Sources */,
 				159F93971963753F006E216F /* CQMWeddedToThreads.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

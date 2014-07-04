@@ -1,5 +1,5 @@
 //
-//  CQMTwistedRunLoop.h
+//  CQMTwistedRunLoopTests.h
 //  Thread-OBJC
 //
 //  Created by mar Jinn on 7/4/14.
@@ -8,11 +8,6 @@
 
 #import <Foundation/Foundation.h>
 
-@interface CQMTwistedRunLoop: NSObject
-{
-    
-}
-
--(void)theThread;
+@interface CQMTwistedRunLoopTests : NSObject
 
 @end
