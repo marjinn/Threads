@@ -167,6 +167,70 @@
 }
 
 
+//-- THREAD - Handling Manual Termination
+//-- Checking for an exit condition during a long job
+//----------------------------------------
+// -- Steps Involved
+//-------------------
+// -- #1 For long running jobs stopping work periodically
+// -- #2 Checking to see if such a cancel or exit message arrive
+// -- #3 If YES perform any needed cleanup and exit gracefully
+// -- #4 otherwise, simply go back to work and process the next chunk of data.
+// -- #5 One way to respond to cancel messages is to use a run loop input
+// --    source to receive such messages.
+// --    (The example shows the main loop portion only and does not include the
+// --    steps for setting up an autorelease pool or configuring the actual
+// --    work to do.)
+// -- #6 The example installs a custom input source on the run loop that
+// --    presumably can be messaged from another one of your threads;
+// -- #7 After performing a portion of the total amount of work, the thread
+// --    runs the run loop briefly to see if a message arrived on the input
+// --    source.
+// -- #8 If not, the run loop exits immediately and the loop continues with the
+// --    next chunk of work.
+// -- #9 Because the handler does not have direct access to the exitNow local
+// --    variable, the exit condition is communicated through a key-value pair
+// --    in the thread dictionary.
+
+
+-(void)threadMainRoutine
+{
+    BOOL moreWorkToDo =  YES;
+    BOOL exitNow      =  NO;
+    
+    NSRunLoop* runLoop = nil;
+    runLoop = [NSRunLoop currentRunLoop];
+    
+    //-- Add the exit now BOOL to the thread local storage dictionary
+    NSMutableDictionary* threadDict = nil;
+    threadDict = [[NSThread currentThread] threadDictionary];
+    [threadDict setValue:[NSNumber numberWithBool:exitNow]
+                  forKey:@"ThreadShouldExitNow"];
+    
+    //-- Install Custom Input source
+    [self myInstallCustomInputSource];
+    
+    while (moreWorkToDo && !exitNow)
+    {
+        //-- Do one chunk of larger body of work here
+        //-- Change the value of the "moreWorkToDo" Boolean when done
+        
+        //-- Run the runloop but timeput immediatly
+        //-- if the input source isn't waiting to fire
+        [runLoop runUntilDate:[NSDate date]];
+        
+        //Check to see if the inputSource Handler changed the exitNow value.
+        exitNow =
+        [[threadDict valueForKey:@"ThreadShouldExitNow"] boolValue];
+    }
+    
+    return;
+}
+
+-(void)myInstallCustomInputSource
+{
+    return;
+}
 #pragma mark -
 #pragma mark POSIX Thread
 
