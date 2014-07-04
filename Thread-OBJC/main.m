@@ -40,7 +40,10 @@ int main(int argc, const char * argv[])
         
         //-- MainRunLoop - run for 10 extra seconds
         //             - wait for secondary threads
-        [[NSRunLoop currentRunLoop] runUntilDate:[NSDate dateWithTimeInterval:10.0 sinceDate:[NSDate date]]];
+        //[[NSRunLoop currentRunLoop] runUntilDate:[NSDate dateWithTimeInterval:10.0 sinceDate:[NSDate date]]];
+        
+        //-- Run indefinetly
+        [[NSRunLoop currentRunLoop] run];
 
     }
     return 0;

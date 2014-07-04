@@ -436,6 +436,27 @@
                     - Run loop observers must be created using 
                         Core Foundation, even for Cocoa applications.
  
+ 18. Example "threadMain"
+ -------------------------
+        - shows adding runloop observer for all runloopactvities
+        
+        Caveats of timer based apparoach
+        --------------------------------
+        -- When configuring the run loop for a long-lived thread, 
+            it is better to add at least one input source to receive messages.
+        -- Although you can enter the run loop with only a timer attached,
+            once the timer fires, 
+            it is typically invalidated, 
+            which would then cause the run loop to exit. 
+        -- Attaching a repeating timer could keep the run loop running over a
+            longer period of time, 
+            but would involve firing the timer
+            periodically to wake your thread, 
+            which is effectively another form of polling. 
+        -- By contrast, an input source waits for an event to happen,
+            keeping your thread asleep until it does.
+ 
+
  */
 
 @implementation CQMTwistedRunLoop
@@ -528,9 +549,10 @@
                                          target:(id)self
                                        selector:@selector(doFireTimer:)
                                        userInfo:nil
-                                        repeats:YES];
-        
-        NSTimeInterval loopCount = 1;
+                                        repeats:NO];
+                                        //if Yes - Thread Runs forever
+       
+        NSTimeInterval loopCount = 10;
         
         do
         {
