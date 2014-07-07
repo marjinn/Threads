@@ -25,6 +25,7 @@
           processing code that recieves events and calls the installed
           handlers
  4. A run loop can recieve events from (2(primarily)) 3 different sources
+ 
  a. Input Sources
     -------------
     - delivers asynchronous events,messages from another thread or
@@ -76,7 +77,7 @@
     h. Custom modes are specified by a custom string for mode name
     i. one or more input sources or/and run-loop observers should be
         added to custom modes for them to be useful.
-    j. For secondary-thraeds, you might use custom modes to prevent
+    j. For secondary-threads, you might use custom modes to prevent
         low-priority sources from delivering events
         during time critical operations
  
@@ -143,7 +144,7 @@
     1. Port-Based Sources
        ------------------
         - monitor application's Mach ports.
-        - signaled automatically bt the kernel.
+        - signaled automatically by the kernel.
         - Creating a port-based source
             - Cocoa
                 - built-in support for creating port-based input sources
@@ -159,6 +160,7 @@
                     - CFMessagePortRef
                     - CFSocketRef
                    to create the appropriate objects.
+    
     2. Custom Input Sources
         -------------------
         - monitor custom event sources
@@ -190,12 +192,15 @@
         - Cocoa defined custom input source.
         - removes itself from runloop after it performs its selector
         - the target thread must have an active run loop
-        - for ( secondary) threads we create it means ,waiting until our code explicitly
+        - for ( secondary) threads we create, it means waiting until our
+            code explicitly
             starts the runloop
         - main thread starts its on runloop, so we can begin issuing calls on
-            the "main thread" as soons as application calls
+            the "main thread" as soon as application calls
             "applicationDidFinishLaunching:" method of application delegate.
-        - "runloop processes all queued perform selector calls each time through the loop ,rather than processing one during each iteration"
+        - "runloop processes all queued perform selector calls
+            each time through the loop ,rather than processing one during 
+                each iteration"
         - can be used on POSIX threads as well
         - declared on NSObject
         - These methods do not create a new thread to perform a selector
@@ -250,7 +255,8 @@
     b. eg.:- 
             - Timers are a way for a thread to notify itself to do something.
             - For example, a search field could use a timer to initiate an
-                automatic search once a certain amount of time has passed between successive key strokes from the user. The use of
+                automatic search once a certain amount of time has passed 
+                between successive key strokes from the user. The use of
                     this delay time gives the user a chance to type as much of 
                     the desired search string 
                     as possible before beginning the search.
@@ -338,7 +344,8 @@
                 not port based are about to fire.
             
             4. Fire any non-port-based input sources that are ready to fire.
-            5. If a port-based input source is ready and waiting to fire, process the event immediately. Go to step 9.
+            5. If a port-based input source is ready and waiting to fire, 
+                process the event immediately. Go to step 9.
             
             NOTIFY Functions
             ----------------
@@ -383,7 +390,8 @@
  
  14. WHEN WOULD YOU USE A RUN LOOP
  ---------------------------------
-    - The only time you need to run a run loop explicitly is when you create secondary threads for your application
+    - The only time you need to run a run loop explicitly is 
+        when you create secondary threads for your application
     - You need to start a run loop if you plan to do any of the following:
  
         1. Use ports or custom input sources to communicate with other threads.
@@ -456,10 +464,331 @@
         -- By contrast, an input source waits for an event to happen,
             keeping your thread asleep until it does.
  
+ 19. Starting The RunLoop
+ ------------------------
+    1. is necessary only for secondary threads
+    2. A runLoop must have atleast one input source or timer to monitor
+    3. if no sources are attached the runLoop exist immediatly.
+    4. Some of the ways to start a RunLoop are .:-
+            a. Unconditionally
+                    - simplest option,but lesat desirable
+                    - puts the thread into a permanent loop
+                    - gives you very little control
+                    - can add and remove input sources and timers ,but the only 
+                        way to stop the runLoop will be to kill the loop.
+                    - there is no way to run the loop in custom mode.
+            b. With a set time limit
+                    - better to run the runLoop with a timeout value.
+                    - runLoop runs unitil an event arrives or the alotted 
+                        time expires.
+                    - If an event arrives, that event is dispathched to a 
+                        handler for processing and the runLoop Exits
+                    - Code can then restart the run loop to handle the next 
+                        event.
+                    - If the allotted time expires, you can simply restart the
+                        runLoop or do some houseKeeping.
+            c. In a particular mode
+                    - Modes and time outs can be used together
+                    - modes limit the types of sources that deliver events 
+                        to the runLoop.
+            eg.:-
+                    - a skeleton version of a thread’s main entry routine.
+                    - The key portion of this example shows the basic 
+                        structure of a run loop. 
+                    - In essence, you add your input sources and timers to the 
+                        run loop and then repeatedly call one of the routines 
+                        to start the  run loop.
+                    - Each time the run loop routine returns, you check 
+                        to see if any conditions have arisen that might warrant
+                        exiting the thread.
+                    - The example uses the Core Foundation run loop routines 
+                        so that it can check the return result and 
+                        determine why the run loop exited.
+ 
+ 20. Nested RunLoop Calls
+ ------------------------
+    1. It is possible to run runLoop recursively
+    2. You can call CFRunLoopRun, CFRunLoopRunInMode, or any of the NSRunLoop
+        methods for starting the run loop 
+        from within the handler routine of an input source or timer.
+    3. you can use any mode you want to run the nested run loop,
+        including the mode in use by the outer run loop
+    4. Run loops can be run recursively.
+            - You can call CFRunLoopRunInMode from within any run loop callout
+                and create nested run loop activations on the
+                current thread’s call stack.
+            - You are not restricted in which modes you can run from within a 
+                callout. 
+            - You can create another run loop activation running in any available
+                run loop mode, including any modes 
+                already running higher in the call stack.
+ 
+    5. The run loop exits with the following return values under
+        the indicated conditions:
+                - kCFRunLoopRunFinished. 
+                    The run loop mode mode has no sources or timers.
+                - kCFRunLoopRunStopped. 
+                    The run loop was stopped with CFRunLoopStop.
+                - kCFRunLoopRunTimedOut. 
+                    The time interval seconds passed.
+                - kCFRunLoopRunHandledSource. 
+                    A source was processed. 
+                    This exit condition only applies when 
+                        returnAfterSourceHandled is true.
+    6. You must not specify the kCFRunLoopCommonModes constant for the mode
+        parameter. 
+        Run loops always run in a specific mode.
+    7.  You specify the common modes only
+                - when configuring a run-loop observer and 
+                - only in situations where you want that observer to
+                    run in more than one mode
+
+ 21. Exiting a Run Loop
+ -----------------------
+    1. Two ways
+            a. Configure the runLoop to run  with a timeOut Value
+                - Specifying a timeout value lets 
+                    the run loop finish all of its normal processing, 
+                    including delivering notifications to run loop observers,
+                    before exiting.
+            b. Tell the runLoop to stop.
+                - Use CFRunLoopStop("runLoop")
+                - The run loop sends out any remaining run-loop notifications
+                    and then exits. 
+                - The difference is that you can use this technique on 
+                    run loops you started unconditionally.
+    
+      # Although removing a run loop’s input sources and timers may also
+        cause the run loop to exit, 
+        this is not a reliable way to stop a run loop. 
+      # Some system routines add input sources to a run loop to handle needed
+        events.
+      # Because your code might not be aware of these input sources,
+        it would be unable to remove them, which would prevent the 
+        run loop from exiting.
+ 
+ 
+ 22. Thread Safety
+ ------------------
+ 
+    1. Thread safety varies depending on which API you are using
+        to manipulate your run loop.
+    2. The functions in "Core Foundation" are generally "thread-safe" 
+        and can be called from any thread. 
+    3. If you are performing operations that alter the configuration of the run
+        loop, however, it is still good practice to do so 
+        from the thread that owns the run loop whenever possible.
+ 
+    4. The Cocoa NSRunLoop class is not as inherently thread safe as its Core
+        Foundation counterpart. 
+    5.  If you are using the NSRunLoop class to modify your run loop,
+        you should do so only from the same thread that owns that run loop. 
+    6.  Adding an input source or timer to a run loop belonging to a different
+        thread could cause your code to crash or behave in an unexpected way.
+ 
+
+ Key Summary
+ -----------
+ -- Core foundation runloop PAi thread-safe
+ -- Cocoa Run loop apis - not threadsafe
+ -- always better to alter runloop behaviour from the owner thread 
+    -- includes adding an input source or timer
+ 
+ 
+ 
+ 23. Configuring Input Sources
+ -----------------------------
+ 
+ 1. Defining a custom Input Source
+ ---------------------------------
+    Creating a  custom input source involves defining the following
+        a. The information you want your input source to process
+        b. A scheduler routine to let interetsed clients 
+            know how to contact your input source.
+        c. A handler routine to perform requests sent by any clients
+        d. A cancellation routine to inavlidate your input source.
+ 
+ a sample configuration of a custom input source.
+ --------------------------------------------------
+ 
+    Main Thread                                 Worker thread
+ 
+ ^---->                                         ^---->v
+ |    |      ------                             |    |            -------------
+ ^    v---> | TASK |                            ^    v <---------|Input Source |
+ |    |      ------                             |    |            -------------
+ ^    v                                         ^    V            ^  ^  ^
+ |    |              -------------------------> |    |            |  |  |
+ ^    v             |                           ^    v    --------|  |  |
+ |    |             |                           |    |    |   |------|  |
+ ^    v             |                           ^<---v    |   |         |
+ |<---|             |           Wake up                   |   |         |
+                    |     |-------------------------------|   |         |
+                    |     |          Signal Source            |         |
+                runloop source -------------------------------|         |
+                                Send Command                            V
+                Command data ----------------------------------->Command Buffer
+ 
+ In this example, 
+        1. the application’s main thread maintains references to the input source,
+            the custom command buffer for that input source, 
+            and the run loop on which the input source is installed.
+        2. When the main thread has a task it wants to hand off to the worker 
+            thread, it posts a command to the command buffer along with any 
+            information needed by the worker thread to start the task.
+            (Because both the main thread and the input source of the 
+            worker thread have access to the command buffer, 
+            that access must be synchronized.)
+        3. Once the command is posted, the main thread signals 
+            the input source and wakes up the worker thread’s run loop. 
+        4. Upon receiving the wake up command, the run loop calls 
+            the handler for the input source, which processes 
+            the commands found in the command buffer.
+ 
+ TASK 1 . Defining The Input Source
+ ----------------------------------
+ 
+    - The input source introduced uses an Objective-C object to manage a command
+        buffer and coordinate with the run loop. 
+    - Also shows the definition of this object. 
+    - The RunLoopSource object manages a command buffer 
+        and uses that buffer to receive messages from other threads.
+    - This listing also shows the definition of the RunLoopContext object,
+        which is really just a container object used to 
+        pass a RunLoopSource object and a run loop reference 
+        to the application’s main thread
+ 
+    - Although the Objective-C code manages the custom data of the input source,
+        attaching the input source to a run loop requires C-based callback
+        functions.
+    - The first of these functions is called when you actually attach(schedule)
+        the run loop source to your run loop,
+    - Because this input source has only one client (the main thread),
+        it uses the scheduler function to send a message
+        to register itself with the application delegate on that thread. 
+    - When the delegate wants to communicate with the input source, 
+        it uses the information in RunLoopContext object to do so.
+ 
 
  */
 
+
+#pragma mark -
+#pragma mark Custom input source object definition
+#pragma mark -
+
+
+
+@implementation RunLoopSource
+
+void RunLoopSourceScheduleRoutine (void *info, CFRunLoopRef rl, CFStringRef mode)
+{
+    RunLoopSource* obj = nil;
+    obj = (__bridge RunLoopSource*)info;
+    
+    //AppDelegate
+    return;
+}
+
+@end
+
+
+
+
+
+
+
+
+@implementation RunLoopContext
+
+
+
+@end
+
+
 @implementation CQMTwistedRunLoop
+
+#pragma mark -
+#pragma mark Starting the Run loop
+#pragma mark -
+-(void)skeletonThreadMain
+{
+    //-- 1. Setting up an AutolreleasePool
+    @autoreleasepool
+    {
+        BOOL done = NO;
+        
+        //--2 . Add your sources or timers to the runLop and do any other setup
+        
+        do
+        {
+            //--3. Start the runLoop but return after each source is handled
+            SInt32 result = 0;
+            /*
+             CF_EXPORT SInt32 CFRunLoopRunInMode(CFStringRef mode, CFTimeInterval seconds, Boolean returnAfterSourceHandled);
+             */
+            result = CFRunLoopRunInMode(
+                                        kCFRunLoopDefaultMode,
+                                        (CFTimeInterval) 10.0,
+                                        true);
+            
+            //-- 4 SWicthing on all possible return Values
+            /*
+              Reasons for CFRunLoopRunInMode() to Return
+            enum {
+                kCFRunLoopRunFinished = 1,
+                kCFRunLoopRunStopped = 2,
+                kCFRunLoopRunTimedOut = 3,
+                kCFRunLoopRunHandledSource = 4
+            };
+
+             */
+            switch (result)
+            {
+                case kCFRunLoopRunFinished:
+                    printf("\n kCFRunLoopRunFinished \n");
+                    break;
+                    
+                case kCFRunLoopRunStopped:
+                    printf("\n kCFRunLoopRunStopped \n");
+                    break;
+                    
+                case kCFRunLoopRunTimedOut:
+                    printf("\n kCFRunLoopRunTimedOut \n");
+                    break;
+                    
+                case kCFRunLoopRunHandledSource:
+                    printf("\n kCFRunLoopRunHandledSource \n");
+                    break;
+                    
+                default:
+                    printf("\n result \n");
+                    break;
+            }
+            
+            
+            //-- 5  If a source explicitly stopped the run loop or ,
+              //--  if there are no sources or timers
+              //--  Exit the run loop
+            if (
+                (result == kCFRunLoopRunStopped) ||
+                (result == kCFRunLoopRunFinished)
+                )
+            {
+                done = YES;
+                
+                // Check for any other exit conditions here and set the
+                // done variable as needed.
+            }
+            
+        }
+        while (!done);
+        
+        // Clean up code here.
+        // Be sure to release any allocated autorelease pools.
+    }
+}
+
 #pragma mark -
 #pragma mark Run Loop Observer
 #pragma mark -
@@ -577,7 +906,8 @@
  typedef void (*CFRunLoopObserverCallBack)(CFRunLoopObserverRef observer, CFRunLoopActivity activity, void *info);
  */
 
-void myCFRunLoopObserverCallBack (CFRunLoopObserverRef observer, CFRunLoopActivity activity, void *info)
+void myCFRunLoopObserverCallBack (CFRunLoopObserverRef observer,
+                                  CFRunLoopActivity activity, void *info)
 {
     NSLog(@"--- @@@@@@@ ---- \n");
     NSLog(@"--- @@__COUNTER__@@@@ ---- %u \n",arc4random());
@@ -635,7 +965,7 @@ void myCFRunLoopObserverCallBack (CFRunLoopObserverRef observer, CFRunLoopActivi
     }
     
     printf("info - %s\n",info);
-    
+    NSLog(@"info - %@\n",(__bridge CQMTwistedRunLoop*)(info));
     return;
 }
 
