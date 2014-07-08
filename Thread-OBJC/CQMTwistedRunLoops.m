@@ -8,7 +8,7 @@
 
 
 #import "CQMTwistedRunLoop.h"
-#import "AppDelegate.h"
+
 
 @import CoreFoundation;
 
